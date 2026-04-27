@@ -15,7 +15,7 @@ export interface NarInfoFields {
   readonly fileHash: FileHash;
   readonly fileSize: number;
   readonly compression: Compression;
-  readonly references: readonly StorePathHash[];
+  readonly references: readonly string[];
   readonly deriver?: string;
   readonly system?: string;
   readonly signatures: readonly string[];

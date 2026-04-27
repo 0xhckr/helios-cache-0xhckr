@@ -38,7 +38,7 @@ export async function getPathInfo(storePath: string): Promise<PathInfo> {
     if (!refBase) {
       throw new Error(`Invalid reference path: ${r}`);
     }
-    return refBase.split("-")[0];
+    return refBase;
   });
 
   return {

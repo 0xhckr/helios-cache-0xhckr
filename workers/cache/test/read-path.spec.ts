@@ -10,6 +10,8 @@ const FILE_HASH = "a".repeat(64);
 const NAR_HASH = `sha256:${"1".repeat(52)}`;
 const R2_KEY = `nars/sha256/${FILE_HASH}/zstd.nar`;
 const R2_BODY = new Uint8Array([1, 2, 3, 4]);
+const REF_HASH_B = "b".repeat(32);
+const REF_HASH_C = "c".repeat(32);
 
 function getDb() {
 	return drizzle(env.CACHE_DB);
@@ -34,7 +36,7 @@ beforeAll(async () => {
 		narHash: NAR_HASH,
 		narSize: 2048,
 		blobObjectId: blob.id,
-		referencesJson: "[]",
+		referencesJson: JSON.stringify([`${REF_HASH_B}-glibc-2.39`, `${REF_HASH_C}-gcc-13.2.0-lib`]),
 		deriver: null,
 		system: null,
 		signaturesJson: "[]",
@@ -72,6 +74,14 @@ describe("narinfo", () => {
 		expect(body).toContain("FileHash:");
 		expect(body).toContain("Compression: zstd");
 		expect(body).toContain("URL: nar/");
+	});
+
+	it("includes full basenames in References field", async () => {
+		const res = await SELF.fetch(`http://example.com/test-cache/${STORE_PATH_HASH}.narinfo`);
+
+		expect(res.status).toBe(200);
+		const body = await res.text();
+		expect(body).toContain(`References: ${REF_HASH_B}-glibc-2.39 ${REF_HASH_C}-gcc-13.2.0-lib`);
 	});
 
 	it("HEAD returns 200 with headers but no body", async () => {
