@@ -67,8 +67,8 @@ export async function handleCreateToken(
 	}
 
 	const expiresInDays = body.expiresInDays ?? DEFAULT_TOKEN_LIFETIME_DAYS;
-	if (!Number.isFinite(expiresInDays) || !Number.isInteger(expiresInDays) || expiresInDays < 1 || expiresInDays > MAX_TOKEN_LIFETIME_DAYS) {
-		return errorResponse(`expiresInDays must be between 1 and ${MAX_TOKEN_LIFETIME_DAYS}`, 400);
+	if (expiresInDays !== 0 && (!Number.isFinite(expiresInDays) || !Number.isInteger(expiresInDays) || expiresInDays < 1 || expiresInDays > MAX_TOKEN_LIFETIME_DAYS)) {
+		return errorResponse(`expiresInDays must be 0 (never expire) or between 1 and ${MAX_TOKEN_LIFETIME_DAYS}`, 400);
 	}
 
 	const dedupedCaches = [...new Set(body.caches)];
@@ -76,7 +76,6 @@ export async function handleCreateToken(
 
 	const now = Date.now() / 1000;
 	const jti = crypto.randomUUID();
-	const exp = now + expiresInDays * 86400;
 
 	const claims: TokenClaims = {
 		jti,
@@ -86,12 +85,12 @@ export async function handleCreateToken(
 		caches: dedupedCaches,
 		perms: dedupedPerms,
 		iat: Math.floor(now),
-		exp: Math.floor(exp),
+		...(expiresInDays > 0 ? { exp: Math.floor(now + expiresInDays * 86400) } : {}),
 	};
 
 	const token = await signJwt(claims, config.jwtSecret);
 
-	const expiresAt = new Date(exp * 1000).toISOString();
+	const expiresAt = expiresInDays > 0 ? new Date((now + expiresInDays * 86400) * 1000).toISOString() : null;
 
 	await createApiToken(config.db, {
 		jti,

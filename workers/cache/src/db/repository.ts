@@ -1,4 +1,4 @@
-import { eq, and, notInArray, lt, inArray, isNull } from "drizzle-orm";
+import { eq, and, notInArray, lt, inArray, isNull, isNotNull } from "drizzle-orm";
 import type { DrizzleD1Database } from "drizzle-orm/d1";
 import {
 	caches,
@@ -377,7 +377,7 @@ export async function createApiToken(
 		readonly subject: string;
 		readonly cachesJson: string;
 		readonly permsJson: string;
-		readonly expiresAt: string;
+		readonly expiresAt: string | null;
 		readonly createdBy: string;
 	},
 ): Promise<ApiToken> {
@@ -437,7 +437,7 @@ export async function deleteExpiredApiTokens(
 ): Promise<number> {
 	const result = await db
 		.delete(apiTokens)
-		.where(lt(apiTokens.expiresAt, now))
+		.where(and(isNotNull(apiTokens.expiresAt), lt(apiTokens.expiresAt, now)))
 		.run();
 	return result.meta.changes ?? 0;
 }

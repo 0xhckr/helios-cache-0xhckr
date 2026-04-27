@@ -7,7 +7,7 @@ export type TokenClaims = {
 	readonly aud: string;
 	readonly caches: readonly string[];
 	readonly perms: readonly TokenPermission[];
-	readonly exp: number;
+	readonly exp?: number;
 	readonly iat: number;
 };
 
@@ -88,7 +88,7 @@ function validateClaims(obj: Record<string, unknown>): JwtVerifyResult {
 	}
 
 	const exp = obj["exp"];
-	if (typeof exp !== "number") {
+	if (exp !== undefined && typeof exp !== "number") {
 		return { kind: "error", reason: "invalid token" };
 	}
 
@@ -107,7 +107,7 @@ function validateClaims(obj: Record<string, unknown>): JwtVerifyResult {
 		return { kind: "error", reason: "invalid token" };
 	}
 
-	if (!Number.isSafeInteger(exp) || !Number.isSafeInteger(iat)) {
+	if ((exp !== undefined && !Number.isSafeInteger(exp)) || !Number.isSafeInteger(iat)) {
 		return { kind: "error", reason: "invalid token" };
 	}
 
@@ -117,7 +117,7 @@ function validateClaims(obj: Record<string, unknown>): JwtVerifyResult {
 		return { kind: "error", reason: "invalid token" };
 	}
 
-	if (exp <= iat) {
+	if (exp !== undefined && exp <= iat) {
 		return { kind: "error", reason: "invalid token" };
 	}
 
@@ -205,7 +205,7 @@ export async function verifyJwt(token: string, secret: string): Promise<JwtVerif
 
 	const earlyExp = claims["exp"];
 	if (typeof earlyExp === "number" && earlyExp <= Date.now() / 1000 - MAX_CLOCK_SKEW_SECONDS) {
-		return { kind: "error", reason: "invalid token" };
+		return { kind: "error", reason: "token expired" };
 	}
 
 	const key = await getKey(secret);

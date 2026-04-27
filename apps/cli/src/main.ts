@@ -23,7 +23,7 @@ Options:
 Token create options:
   --caches <names>   Comma-separated cache names or "*" (default: *)
   --perms <perms>    Comma-separated permissions (default: push)
-  --expires <days>   Token lifetime in days (default: 90)
+  --expires <days>   Token lifetime in days, 0 for never (default: 90)
 
 Examples:
   helios login prod https://cache.example.com my-admin-secret
@@ -159,8 +159,8 @@ async function main(): Promise<void> {
       const expiresIdx = args.indexOf("--expires");
       if (expiresIdx !== -1 && expiresIdx + 1 < args.length) {
         expiresInDays = parseInt(args[expiresIdx + 1], 10);
-        if (!Number.isInteger(expiresInDays) || expiresInDays < 1) {
-          console.error("--expires must be a positive integer");
+        if (!Number.isInteger(expiresInDays) || expiresInDays < 0) {
+          console.error("--expires must be 0 (never expire) or a positive integer");
           process.exit(1);
         }
       }
@@ -173,7 +173,7 @@ async function main(): Promise<void> {
       console.log(`  JTI:     ${result.jti}`);
       console.log(`  Caches:  ${result.caches.join(", ")}`);
       console.log(`  Perms:   ${result.perms.join(", ")}`);
-      console.log(`  Expires: ${result.expiresAt}`);
+      console.log(`  Expires: ${result.expiresAt ?? "never"}`);
       console.log("");
       console.log(result.token);
       return;
@@ -187,7 +187,7 @@ async function main(): Promise<void> {
       }
       for (const t of tokens) {
         const status = t.revokedAt ? `revoked (${t.revokedAt})` : "active";
-        console.log(`${t.jti}  ${t.subject}  [${t.perms.join(",")}]  caches=[${t.caches.join(",")}]  ${status}  expires=${t.expiresAt}`);
+        console.log(`${t.jti}  ${t.subject}  [${t.perms.join(",")}]  caches=[${t.caches.join(",")}]  ${status}  expires=${t.expiresAt ?? "never"}`);
       }
       return;
     }
