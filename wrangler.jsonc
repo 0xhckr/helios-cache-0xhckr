@@ -1,0 +1,31 @@
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "helios-cache-0xhckr",
+	"main": "workers/cache/src/index.ts",
+	"compatibility_date": "2026-03-10",
+	"observability": {
+		"enabled": true
+	},
+	"upload_source_maps": true,
+	"workers_dev": true,
+	"vars": {
+		"SIGNING_KEY_NAME": "helios-cache-1"
+	},
+	"r2_buckets": [
+		{
+			"binding": "CACHE_BUCKET",
+			"bucket_name": "helios-cache-0xhckr-r2","preview_bucket_name": "helios-cache-0xhckr-r2"
+		}
+	],
+	"d1_databases": [
+		{
+			"binding": "CACHE_DB",
+			"database_name": "helios-cache-0xhckr-db",
+			"database_id": "1089bb90-3edb-47bf-8b46-83db69367581",
+			"migrations_dir": "workers/cache/migrations"
+		}
+	],
+	"triggers": {
+		"crons": ["0 */6 * * *"]
+	}
+}
